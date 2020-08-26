@@ -303,7 +303,7 @@ class Index extends React.Component {
           </Col>
           <Col className={styles.container_box} span={10}>
             <div className={styles.item}>
-              <div className={styles.content}>
+              <div className={styles.content2}>
                 <div className={styles.map} ref={ref => (this.ref = ref)} />
                 <Zhexiantu heighttemp={'auto'} />
               </div>
