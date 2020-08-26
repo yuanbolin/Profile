@@ -41,7 +41,6 @@ class RouterTabs extends Component {
   handleClose = (tag, e) => {
     let { currentPath, refsTag } = this.props
     // const { searchMap } = this.props;
-    const newRefsTag = [...refsTag.filter(t => t !== tag)]
     // 关闭当前页
     if (currentPath === tag) {
       currentPath = refsTag[refsTag.indexOf(tag) - 1]

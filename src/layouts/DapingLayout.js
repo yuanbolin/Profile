@@ -8,25 +8,21 @@
  */
 
 import React, { Component } from 'react'
-import { Layout, Menu, Icon, ConfigProvider, Tooltip } from 'antd'
-import { Link, router } from 'umi'
+import { Layout, ConfigProvider } from 'antd'
 import zhCN from 'antd/es/locale/zh_CN'
 import styles from './DapingLayout.less'
 
-const { Header, Content, Sider } = Layout
+const { Header, Content } = Layout
 
 export default class DapingLayout extends Component {
   constructor(props) {
     super(props)
-    this.state = {
-      backgroundImg: 'page_daping_header_style0'
-    }
+    this.state = {}
   }
 
   componentDidMount() {}
 
   render() {
-    let { backgroundImg } = this.state
     return (
       <ConfigProvider locale={zhCN}>
         <Layout style={{ minHeight: '100vh', minWidth: 1900 }}>

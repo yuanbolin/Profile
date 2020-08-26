@@ -15,7 +15,7 @@ export default [
       },
       {
         path: '/daping/index',
-        component: './tj_xunlianzhixu',
+        component: './index',
       },
     ]
   },
