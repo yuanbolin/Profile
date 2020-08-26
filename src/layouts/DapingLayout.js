@@ -25,7 +25,7 @@ export default class DapingLayout extends Component {
   render() {
     return (
       <ConfigProvider locale={zhCN}>
-        <Layout style={{ minHeight: '100vh', minWidth: 1900 }}>
+        <Layout style={{ minHeight: '100vh', minWidth: 1600 }}>
           <Header className={`${styles.header_div}`}>营销应用</Header>
           <Layout id='layout_div'>
             <Content style={{ display: 'flex', flexDirection: 'cloumn' }} id='root_content_div'>

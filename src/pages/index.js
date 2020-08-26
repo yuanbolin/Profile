@@ -13,17 +13,26 @@ const renyuanmiji =
 class Index extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {}
+    this.state = {
+      change: 0
+    }
   }
 
   componentDidMount() {
     this.initalECharts()
+    window.onresize = () => {
+      this.time && clearTimeout(this.time)
+      this.time = setTimeout(() => {
+        this.myChart && this.myChart.resize()
+      }, 200)
+    }
   }
 
   initalECharts = (data = []) => {
     // console.log(data)
+
     echarts.registerMap('china', geoJson)
-    const myChart = echarts.init(this.ref)
+    this.myChart = echarts.init(this.ref)
     let coordsList = []
     for (let i = 0; i < coordsList.length; i++) {
       coordsList.push({
@@ -33,7 +42,7 @@ class Index extends React.Component {
         }
       })
     }
-    myChart.setOption({
+    this.myChart.setOption({
       tooltip: {
         trigger: 'item'
       },
