@@ -1,0 +1,309 @@
+<!doctype html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+		<title>轨迹回放</title>
+		<script type="text/javascript" src="../jquery.min.js"></script>
+		<script type="text/javascript" src="../layer.js"></script>
+		<script type="text/javascript" src="../common.js"></script>
+		<script type="text/javascript" src="../moment.js"></script>
+
+		<link rel="stylesheet" type="text/css" href="../theme/default/lis.css" />
+		<link rel="stylesheet" type="text/css" href="../theme/default/gis.css" />
+		<link rel="stylesheet" type="text/css" href="../theme/default/style.css" />
+		<link rel="stylesheet" type="text/css" href="../theme/default/H-ui.min.css" />
+		<link rel="stylesheet" type="text/css" href="../theme/default/H-ui.reset.css" />
+		<style type="text/css">
+			#container {
+		        width: 100%;
+		        height: 100%;
+		        margin: 0px;
+		    }
+			.trcolor {
+				background: #CDC5BF;
+			}
+			.select_car {
+				float: right;
+			}
+			.map {
+				width: 73%;
+				height: 97%;
+				float: left;
+				position: relative;
+				border-width: 1px;
+				border-style: solid;
+				border-color: rgb(210, 210, 210);
+				border-image: initial;
+				margin: 8px;
+				overflow: hidden;
+			}
+			.select_car {
+				width: 25%;
+				height: 97%;
+				line-height: 30px;
+				font-size: 14px;
+				color: #333;
+				border: 1px solid #ddd;
+				margin-top: 8px;
+				margin-right: 7px;
+			}
+			.select_cont input {
+				width: 45%;
+				margin: 10px;
+			}
+			.select_cont button {
+				width: 28%;
+			}
+			.car_lis {
+				height: calc(95% - 90px);
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="map">
+			<h3>
+				<img src="../../imgs/icon_clxsgj.png">车辆行驶轨迹
+			</h3>
+
+			<div id="container"></div>
+		    <script type="text/javascript" src='//webapi.amap.com/maps?v=1.4.9&key=4e1808829fb90fb841c9352870fdae9f'></script>
+		    <script src="//webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script>
+		    <script type="text/javascript">
+		    var chepaihaoma;
+		    $(document).ready(function() {
+				getCarMessage();
+			});
+
+			//自动获取昨天的数据
+			function getNowFormatDate() {
+		        var date = new Date();
+		        date.setTime(date.getTime() - 24*60*60*1000);
+		        var seperator1 = "-";
+		        var year = date.getFullYear();
+		        var month = date.getMonth() + 1;
+		        var strDate = date.getDate();
+		        if (month >= 1 && month <= 9) {
+		            month = "0" + month;
+		        }
+		        if (strDate >= 0 && strDate <= 9) {
+		            strDate = "0" + strDate;
+		        }
+		        var currentdate = year + seperator1 + month + seperator1 + strDate;
+		        return currentdate;
+		    }
+
+			//进入页面默认显示昨天的数据
+			function getCarMessage() {
+				chepaihaoma = window.chepaihaoma;
+				var data = getNowFormatDate();
+				document.getElementById("DAYTIME").value = data;
+				$.ajax({
+					type: "GET",
+					url: SERVER + "yingqucheliangguijiliebiao?chepaihaoma="+chepaihaoma+"&riqi="+data,
+					async: false,
+					data : JSON.stringify(),
+		            dataType : 'json',
+		            contentType : "application/json",
+					success: function(data) {
+						$('#carlist').html('');
+						if (data.data == null || data.data.length == 0) {
+							$('#carlist').html('没有数据！');
+						} else {
+							var alldaygj = data.data.total;
+							var li = "" +
+							"<li class='cl deltr' onclick='startRun(\"" + moment(alldaygj.kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "\",\"" + moment(alldaygj.jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "\")'>" +
+								"<div class='car_lis_left f-l'>" +
+									"<div class='quantian_img'><span>全天</span></div>" +
+								"</div>" +
+								"<div class='car_lis_mid f-l'>" +
+									"<div class='qidian'><i id='sTime'>" + moment(alldaygj.kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+									"<div class='zhongdian'><i id='eTime'>" + moment(alldaygj.jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+								"</div>" +
+							"</li>"
+
+							$('#carlist').append(li);
+							var gj = data.data.list;
+							for(var i = 0; i < gj.length; i++) {
+								var li = "" +
+								"<li class='cl deltr' onclick='startRun(\"" + moment(gj[i].kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "\",\"" + moment(gj[i].jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "\")'>" +
+									"<div class='car_lis_left f-l'>" +
+										"<div class='qidian_img'><span>起</span></div>" +
+										"<div class='zhongdian_img'><span>终</span></div>" +
+									"</div>" +
+									"<div class='car_lis_mid f-l'>" +
+										"<div class='qidian'><i>" + moment(gj[i].kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+										"<div class='zhongdian'><i>" + moment(gj[i].jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+									"</div>" +
+								"</li>"
+								$('#carlist').append(li);
+							}
+						}
+					}
+				});
+			}
+
+			function search() {
+				var daytime = $('#DAYTIME').val();
+				if(daytime == '' || daytime == undefined) {
+					var day = new Date();
+					day.setDate(day.getDate() - 1);
+					daytime = day.format("yyyy-MM-dd");
+					$('#DAYTIME').val(daytime);
+				}
+				chepaihaoma = window.chepaihaoma;
+				$.ajax({
+					type: "get",
+					url: SERVER + "yingqucheliangguijiliebiao?chepaihaoma="+chepaihaoma+"&riqi="+daytime,
+					async: false,
+					data : JSON.stringify(),
+		            dataType : 'json',
+		            contentType : "application/json",
+					success: function(data) {
+                        console.log(data)
+						$('#carlist').html('');
+						if (data.data == null || data.data.length == 0) {
+							$('#carlist').html('没有数据！');
+						} else {
+							var alldaygj = data.data.total;
+							var li = "" +
+							"<li class='cl deltr' onclick='startRun(\"" + moment(alldaygj.kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "\",\"" + moment(alldaygj.jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "\")'>" +
+								"<div class='car_lis_left f-l'>" +
+									"<div class='quantian_img'><span>全天</span></div>" +
+								"</div>" +
+								"<div class='car_lis_mid f-l'>" +
+									"<div class='qidian'><i id='sTime'>" + moment(alldaygj.kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+									"<div class='zhongdian'><i id='eTime'>" + moment(alldaygj.jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+								"</div>" +
+							"</li>"
+
+							$('#carlist').append(li);
+							var gj = data.data.list;
+							for(var i = 0; i < gj.length; i++) {
+								var li = "" +
+								"<li class='cl deltr' onclick='startRun(\"" + moment(gj[i].kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "\",\"" + moment(gj[i].jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "\")'>" +
+									"<div class='car_lis_left f-l'>" +
+										"<div class='qidian_img'><span>起</span></div>" +
+										"<div class='zhongdian_img'><span>终</span></div>" +
+									"</div>" +
+									"<div class='car_lis_mid f-l'>" +
+										"<div class='qidian'><i>" + moment(gj[i].kaishishijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+										"<div class='zhongdian'><i>" + moment(gj[i].jieshushijian).format('YYYY-MM-DD HH:mm:ss') + "</i></div>" +
+									"</div>" +
+								"</li>"
+								$('#carlist').append(li);
+							}
+						}
+					}
+				});
+			}
+			let ditujingdu;
+			let dituweidu;
+			var jigoumingcheng = sessionStorage.getItem("jigoumingcheng");
+			$.ajax({
+				url:SERVER+"zuzhijigouXiangqingJgmc?jigoumingcheng="+jigoumingcheng,
+				async:false,
+				success:function(data) {
+					if (data.data['jingdu'] != 0 && data.data['weidu'] != 0 && data.data['dianziweilanbanjing'] != 0) {
+						ditujingdu = data.data['jingdu'];
+						dituweidu = data.data['weidu'];
+					}
+				}
+			});
+		    //创建地图
+		    var map = new AMap.Map('container', {
+		    	//TODO 地图缩放比例待定，根据测试数据调整
+				center:[ditujingdu,dituweidu],
+		        zoom: 15
+		    });
+		    var navg1 = null;
+
+		    function startRun(starttime, endtime) {
+		    	console.log(navg1);
+		    	if (navg1 != null) {
+		    		navg1.destroy();
+		    	}
+				$.ajax({
+					type: "get",
+					url: SERVER + "yingqucheliangweizhilishiliebiao?chepaihaoma="+chepaihaoma+"&starttime="+starttime+"&endtime="+endtime,
+					async: false,
+					data : JSON.stringify(),
+		            dataType : 'json',
+		            contentType : "application/json",
+					success: function(data) {
+						if (data.data == null || data.data.length == 0) {
+							alert('当前路径为空');
+						} else {
+							//绘制轨迹
+							if (window.pathSimplifierIns) {
+								//通过该方法清空上次传入的轨迹
+								pathSimplifierIns.setData([]);
+							}
+							AMapUI.load(['ui/misc/PathSimplifier', 'lib/$'], function(PathSimplifier, $) {
+						        if (!PathSimplifier.supportCanvas) {
+						            alert('当前环境不支持 Canvas，无法显示轨迹图，建议使用Google浏览器预览');
+						            return;
+						        }
+						        var pathSimplifierIns = new PathSimplifier({
+						            zIndex: 100,
+						            //autoSetFitView:false,
+						            map: map, //所属的地图实例
+						            getPath: function(pathData, pathIndex) {
+						                return pathData.path;
+						            },
+						            getHoverTitle: function(pathData, pathIndex, pointIndex) {
+						                if (pointIndex >= 0) {
+						                    //point
+						                    return pathData.name + '，点：' + pointIndex + '/' + pathData.path.length;
+						                }
+						                return pathData.name + '，点数量' + pathData.path.length;
+						            },
+						            renderOptions: {
+						                renderAllPointsIfNumberBelow: -1 //绘制路线节点，如不需要可设置为-1
+						            }
+						        });
+						        pathSimplifierIns.clearPathNavigators();
+						        window.pathSimplifierIns = pathSimplifierIns;
+						        //设置数据
+						        pathSimplifierIns.setData([{
+						            name: '消防车轨迹',
+						            path: data.data,
+						        }]);
+						        //对第一条线路（即索引 0）创建一个巡航器
+						        navg1 = pathSimplifierIns.createPathNavigator(0, {
+						            loop: false, //不循环播放
+						            //TODO 轨迹移动速度待定，根据测试数据调整
+						            speed: 1000 //巡航速度，单位千米/小时
+						        });
+						        navg1.start();
+						    });
+						}
+					}
+				});
+			}
+
+		    </script>
+
+		</div>
+		<script type="text/javascript" src="../WdatePicker.js" charset="utf-8"></script>
+		<div class="select_car">
+			<div class="select_title">检索列表</div>
+			<div class="select_cont">
+				<label for="">日期</label>
+				<input type="text" onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" id="DAYTIME" name="DAYTIME" class="input-text Wdate" placeholder="">
+				<button type="button" onclick="search()" class="btn btn-success radius">搜索</button>
+			</div>
+			<div class="car_lis">
+				<ul id="carlist"></ul>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+
+		</script>
+
+	</body>
+
+</html>

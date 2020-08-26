@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>小程序注册</title>
+    <link rel="stylesheet" href="../js/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/canvas.css">
+    <style type="text/css">
+        .main {
+            padding: 4em 0;
+        }
+        .main h1 {
+            text-align: center;
+            color: #fff;
+            font-size: 2.5em;
+            margin-bottom: 1.5em;
+        }
+        .w3_login_module {
+            min-height: 475px;
+        }
+        .form-module {
+            position: relative;
+            background: #ffffff;
+            max-width: 400px;
+            width: 100%;
+            border-top: 5px solid #FAC718;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.25);
+            margin: 0 auto;
+        }
+        .form-module .toggle {
+            cursor: pointer;
+            position: absolute;
+            top: -0;
+            right: -0;
+            background: #FAC718;
+            width: 30px;
+            height: 30px;
+            margin: -5px 0 0;
+            color: #ffffff;
+            font-size: 12px;
+            line-height: 30px;
+            text-align: center;
+        }
+        .form-module .form {
+            display: none;
+            padding: 40px;
+        }
+        .form-module h2 {
+            margin: 0 0 1.5em;
+            color: #212121;
+            font-size: 1.2em;
+            font-weight: 400;
+            line-height: 1;
+        }
+        .form-module input[type="text"], .form-module input[type="password"], .form-module input[type="email"] {
+            outline: none;
+            display: block;
+            width: 100%;
+            border: 1px solid #d9d9d9;
+            margin: 0 0 20px;
+            padding: 10px 15px;
+            box-sizing: border-box;
+            font-weight: 400;
+            -webkit-transition: 0.3s ease;
+            transition: 0.3s ease;
+            font-size: 14px;
+        }
+        .form-module input[type="submit"] {
+            background: #84C639;
+            width: 100%;
+            border: 0;
+            padding: 10px 15px;
+            color: #ffffff;
+            -webkit-transition: 0.3s ease;
+            transition: 0.3s ease;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+<div class="main">
+    <h1>小程序注册</h1>
+    <div class="w3_login">
+        <div class="w3_login_module">
+            <div class="module form-module">
+                <div class="form" style="display: block;">
+                    <h2>小程序注册</h2>
+                    <form action="http://192.168.1.114:8082/api/registWxGongzhonghao" method="post">
+                        <input type="text" name="wxYanzhengma" placeholder="微信验证码" required=" ">
+                        <input type="text" name="openIdGongzhonghao" placeholder="oprnID" required=" ">
+                        <input type="submit" value="注册">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../common.js"></script>
+<script src="../js/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+<script src="../js/fabric.min.js"></script>
+<script>
+    $.ajax({
+        url: SERVER + 'xiaofangchehuojia/chaxun',
+        type: 'GET',
+        data: {
+            cheliangbianhao: window.cheliangbianhao
+        },
+        success: (res) => {
+        }
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([[7],{EDuE:function(n,a,e){n.exports={normal:"antd-pro-pages-index.css-normal"}},RXBc:function(n,a,e){"use strict";e.r(a);var o=e("q1tI"),t=e.n(o),r=e("EDuE"),s=e.n(r);a["default"]=function(){return t.a.createElement("div",{className:s.a.normal},"\u6b22\u8fce\uff01")}}}]);

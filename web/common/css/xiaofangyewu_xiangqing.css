@@ -1,0 +1,89 @@
+p {
+  margin: 0;
+}
+
+.imgbox {
+  width: 100vw;
+  height: 66.67vw;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.imgbox img {
+  height: 100%;
+  width: 100%;
+}
+
+.loadimgerr {
+  font-size: 4vw;
+  color: #fff;
+  letter-spacing: 1vw;
+}
+
+#biaoti {
+  font-size: 5.56vw;
+  color: #212429;
+  line-height: 5.56vw;
+}
+
+.flex_row {
+  margin: 3.89vw 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.label{
+  padding: 0.8vw 1vw;
+  border-radius: 1vw;
+  font-size: 3.33vw !important;
+}
+.jieshao_label {
+  width: 9vw;
+  margin-right: 4.44vw;
+  font-size: 4.44vw;
+  line-height: 8.33vw;
+  color: #aaa;
+}
+
+.txt {
+  flex: 1;
+  font-size: 4.44vw;
+  line-height: 8.33vw;
+  color: #212429;
+  letter-spacing: 1px;
+}
+
+.toast {
+  font-size: 3vw;
+  color: #aaa;
+  letter-spacing: 2vw;
+  line-height: 6vw;
+  padding: 0 2vw;
+  text-align: center;
+}
+.jilu_right{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#liulancishu{
+  font-size: 3.33vw;
+  color: #242429;
+}
+.list-group-item {
+  padding: 3.61vw 3.61vw 0 3.61vw;
+}
+.list-group-item.border_b.flex_row{
+  margin: 0 3.61vw 0 3.61vw;
+  padding: 1.67vw 0;
+  border: 0;
+  border-bottom: 1px solid #e6e5ea;
+}
+.lookIcon {
+  margin-right: 1vw;
+  display: inline-block;
+  width: 4.4vw;
+  height: 3vw;
+  background: url("../images/阅读.png") no-repeat center;
+  background-size: 100% 100%;
+}

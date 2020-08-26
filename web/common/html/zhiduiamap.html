@@ -1,0 +1,1117 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+	<title>点聚合</title>
+	<link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+	<script src="https://webapi.amap.com/maps?v=1.4.14&key=4e1808829fb90fb841c9352870fdae9f&plugin=AMap.CircleEditor,AMap.MarkerClusterer"></script>
+	<script src="https://a.amap.com/jsapi_demos/static/demo-center/js/demoutils.js"></script>
+	<link rel="stylesheet" href="https://cache.amap.com/lbs/static/main1119.css"/>
+	<script type="text/javascript" src="https://cache.amap.com/lbs/static/addToolbar.js"></script>
+	<script type="text/javascript" src="../jquery.min.js"></script>
+	<script type="text/javascript" src="../layer.js"></script>
+	<script type="text/javascript" src="../common.js"></script>
+	<script type="text/javascript" src="../moment.js"></script>
+	<script type="text/javascript" src="../js/jquery.ztree.all-3.5.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../theme/default/gis.css"/>
+	<link rel="stylesheet" type="text/css" href="../theme/default/style.css"/>
+	<link rel="stylesheet" type="text/css" href="../theme/default/H-ui.min.css"/>
+	<link rel="stylesheet" type="text/css" href="../theme/default/H-ui.reset.css"/>
+	<link rel="stylesheet" type="text/css" href="../css/zTreeStyle.css"/>
+	<link rel="stylesheet" href="../js/bootstrap-3.3.7-dist/css/bootstrap.min.css">
+	<style type="text/css">
+		.clxx_box {
+			width: 100%;
+			height: 60px;
+		}
+		.BMap_bubble_content .aaa {
+			color: blue;
+			font-weight: 600;
+			margin-bottom: 9px;
+		}
+		.detail_box table td, .szxx_box table td {
+			border: 1px solid #ddd;
+			padding: 3px 0;
+		}
+		.detail_box table td.blue {
+			color: blue;
+			min-width: 18px !important;
+		}
+		.szxx_box table td.blue {
+			color: #ff8800;
+			min-width: 18px !important;
+		}
+		table td, table th {
+			text-align: center!important;
+		}
+		table {
+			width: 100%;
+			empty-cells: show;
+			background-color: transparent;
+			border-collapse: collapse;
+			border-spacing: 0;
+		}
+		tbody {
+			display: table-row-group;
+			vertical-align: middle;
+			border-color: inherit;
+		}
+		tr {
+			display: table-row;
+			vertical-align: inherit;
+			border-color: inherit;
+		}
+		.aaa {
+			text-align: center;
+		}
+		.aaa a {
+			display: inline-block;
+			width: 120px;
+			height: 32px;
+			line-height: 32px;
+			color: #fff !important;
+			background: #63c163;
+			border-radius: 8px;
+			text-decoration: none !important;
+		}
+		.aaa a:nth-child(1) {
+			margin-right: 20px;
+		}
+		.ztree{
+			height: calc(100% - 30px);
+			overflow-y:auto;
+		}
+		#up-map-div{
+			width:310px;
+			height:249px;
+			top:10px;
+			right:10px;
+			position:absolute;
+			z-index:9999;
+			border:1px solid blue;
+			font-size:22px
+		}
+		.table td {
+			color: black;
+			background-color: #4c8bfd;
+			text-align: left;
+			font-size:18px
+		}
+		.panel-title {
+			margin-top: 0px;
+			margin-bottom: 0px;
+			font-size: 16px;
+			color: inherit;
+			text-align:center;
+		}
+		.mapMain{
+			position: absolute;
+			width:98%;
+			min-height: 100%;
+			max-height: 100%;
+			height: auto;
+		}
+	</style>
+</head>
+
+<body>
+<div id="mapMain" class="mapMain">
+	<div class="map_left">
+		<div class="tit">车辆列表</div>
+		<ul id="treeDemo" class="ztree"></ul>
+	</div>
+	<div id="map"></div>
+	<div class="panel panel-primary" id="up-map-div">
+		<div class="panel-heading">
+			<h3 class="panel-title">选中区域信息</h3>
+		</div>
+		<table class="table">
+			<tr><td>消防车数量</td><td id="td1"></td></tr>
+			<tr><td>水量</td><td id="td2"></td></tr>
+			<tr><td>泡沫量</td><td id="td3"></td></tr>
+			<tr><td>器材件数</td><td id="td4"></td></tr>
+			<tr><td>消防员人数</td><td id="td5"></td></tr>
+		</table>
+	</div>
+	<div class="input-card" style="width: 120px">
+		<!--		<button class="btn" onclick="circleEditor.open()" style="margin-bottom: 5px">选定区域</button>-->
+		<button class="btn" onclick="circleEditor.close()">数据统计</button>
+	</div>
+</div>
+
+<script>
+
+	//判断是否是点击的消防车全局变量
+	var panduandianji = false;
+	var treeObj;
+	var setting = {
+		view: {
+			dblClickExpand: false,
+			showLine: true,
+			selectedMulti: false
+		},
+		data: {
+			simpleData: {
+				enable: true,
+				idKey: "id",
+				pIdKey: "pId",
+				rootPId: ""
+			}
+		},
+
+		callback: {
+			// beforeClick: zTreeBeforeClick,
+			onClick: onClick,
+		}
+	};
+	var points = [];
+	var cluster, markers = [];
+	var map ;
+	$(document).ready(function(){
+		getDianziweilan();
+		zTreeReady();
+		//默认开启高德地图圆编辑功能
+		circleEditor.open();
+	});
+	let ditujingdu;
+	let dituweidu;
+	let diaoyong = '二次调用';
+	var jigoumingcheng = sessionStorage.getItem("jigoumingcheng");
+	$.ajax({
+		url:SERVER+"zuzhijigouXiangqingAllZhongdui?diaoyong="+diaoyong,
+		async:false,
+		success:function(data) {
+			if (data.data[0].jingdu != 0 && data.data[0].weidu != 0) {
+				ditujingdu = data.data[0].jingdu;
+				dituweidu = data.data[0].weidu;
+			}else{
+				ditujingdu = 116.417922;
+				dituweidu = 37.433123;
+			}
+		}
+	});
+	var circleR=0;
+	var circleP=0;
+	var circleQ=0;
+	map = new AMap.Map("map", {
+		center:[ditujingdu,dituweidu],
+		zoom: 12,
+		zooms:[8,19]
+	});
+
+	map.on('zoomend', mapZoomend);
+
+	var mybounds = new AMap.Bounds([ditujingdu-8, dituweidu-4], [ditujingdu+8, dituweidu+4]);
+	// map.setBounds(mybounds);
+	// var bounds = map.getBounds();
+	map.setLimitBounds(mybounds);
+
+	var circle,circleEditor;
+	var ids = [];
+	createCircle(ditujingdu, dituweidu);
+	// 缩放地图到合适的视野级别
+	// map.setFitView([ circle ]);
+	map.on('click', changeCirclePosition);
+	var xiaofangcheIdList = [];
+	var aweidu = '';
+	var points1 = [];
+	//编辑模式默认开启
+	circleEditor = new AMap.CircleEditor(map, circle);
+	circleEditor.on('adjust', function (event) {
+		circleR=event.radius;
+		setTimeout(function () {
+			if(circleR==event.radius){
+				$.ajax({
+					type:'GET',
+					url: SERVER + "xiaofangcheNewShu",
+					success: function (data) {
+						compute(data.data);
+					}
+				});
+			}
+		},100)
+	})
+	circleEditor.on('move', function(event) {
+		circleP=event.lnglat.P;
+		circleQ=event.lnglat.Q;
+		console.info(new Date()+'0')
+		setTimeout(function () {
+			if(circleP==event.lnglat.P && circleQ==event.lnglat.Q){
+				$.ajax({
+					type:'GET',
+					url: SERVER + "xiaofangcheNewShu",
+					success: function (data) {
+						compute(data.data);
+					}
+				});
+			}
+		},100)
+	})
+
+	function changeCirclePosition(e){
+		//如果circle存在，修改原来circle的位置，并缩放地图到合适的视野级别
+		//如果circle不存在，新建一个circle
+		if(circle){
+			circle.setCenter(e.lnglat)
+		}else{
+			circle=createCircle(e.lnglat.getLng(),e.lnglat.getLat())
+		}
+		// 缩放地图到合适的视野级别
+		// map.setFitView([circle])
+	}
+	/**
+	 * 创建圆圈
+	 */
+	function createCircle(lng,lat) {
+		circle = new AMap.Circle({
+			center: [lng, lat],
+			radius:2000, //半径
+			strokeColor: "#3366FF", //边框线颜色
+			strokeOpacity: 0.3,       //边框线透明度
+			strokeWeight: 3,        //边框线宽
+			fillColor: "#FFA500", //填充色
+			fillOpacity: 0.35,//填充透明度
+			draggable: true,
+			zIndex: 500,
+		})
+		//添加到地图
+		circle.setMap(map)
+	}
+
+	function mapZoomend(){
+		var radius = 4000;
+		if(map.getZoom() === 8){
+			radius = 16000;
+		}else if((map.getZoom() === 9)){
+			radius = 8000;
+		}else if((map.getZoom() === 10)){
+			radius = 4000;
+		}else if((map.getZoom() === 11)){
+			radius = 2000;
+		}else if((map.getZoom() === 12)){
+			radius = 1000;
+		}else if((map.getZoom() === 13)){
+			radius = 500;
+		}else if((map.getZoom() === 14)){
+			radius = 250;
+		}else if((map.getZoom() === 15)){
+			radius = 125;
+		}else if((map.getZoom() === 16)){
+			radius = 60;
+		}else if((map.getZoom() === 17)){
+			radius = 30;
+		}else if((map.getZoom() === 18)){
+			radius = 15;
+		}else if((map.getZoom() === 19)){
+			radius = 8;
+		}
+		circle.setRadius(radius);
+	}
+
+	function compute(data) {
+		console.info(new Date() + '11111')
+		xiaofangcheIdList = [];
+		var xiaofangcheshuliang = 0;
+		var shuiliang = 0;
+		var paomoliang = 0;
+		var zhuangbeizongjianshu = 0;
+		var zongrenshu = 0;
+		$("#td1").html("");
+		$("#td2").html("");
+		$("#td3").html("");
+		$("#td4").html("");
+		$("#td5").html("");
+
+		for (var i = 0; i < data.length; i++) {
+			if (data[i]['jingdu'] != null && data[i]['weidu'] != null && data[i]['JB'] === -1) {
+				var myLngLat = new AMap.LngLat(data[i]['jingdu'], data[i]['weidu']);
+				if (circle.contains(myLngLat)) {
+					let id = {};
+					id.xiaofangcheId = data[i].cheId;
+					xiaofangcheIdList.push(id);
+				}
+			}
+		}
+		ids = [];
+		for (var i = 0; i <xiaofangcheIdList.length; i++){
+			ids.push(xiaofangcheIdList[i].xiaofangcheId)
+		}
+		if(ids.length === 0){
+			console.log(0)
+		}else {
+			$.ajax({
+				type : "POST",
+				url : SERVER+"zuozhanyingyong/shujutongji",
+				async: false,
+				data : JSON.stringify(ids),
+				dataType : 'json',
+				contentType : "application/json",
+				success : function(data){
+					var carData = data.data;
+					if (carData !== null && carData !== '' && carData !== "undefined" && carData !== 0) {
+						xiaofangcheshuliang = carData.xiaofangcheshu;
+						paomoliang = Number(carData.zongpaomoliang);
+						shuiliang = Number(carData.zongshuiliang);
+						zhuangbeizongjianshu = carData.qicaishu;
+						zongrenshu = carData.xiaofangyuanshu;
+						$("#td1").append(xiaofangcheshuliang + "辆");
+						$("#td2").append(shuiliang + "吨");
+						$("#td3").append(paomoliang + "吨");
+						$("#td4").append(zhuangbeizongjianshu + "件");
+						$("#td5").append(zongrenshu + "人");
+					}
+				}
+
+			})
+		}
+	}
+	circleEditor.on('end', function(event) {
+		if((ids.length === 0)){
+			log.info('该区域内没有消防车')
+		}else {
+			openMessage1(1);
+		}
+	})
+
+	function getidList(){
+		return xiaofangcheIdList;
+	}
+
+	//初始化左侧树
+	function zTreeReady() {
+		$.ajax({
+			type:'GET',
+			url: SERVER + "xiaofangcheNewShu",
+			success: function (data) {
+				zNodes = data.data;
+				for (var i = 0; i < zNodes.length; i++) {
+					if(data.data[i].JB === 3 || data.data[i].JB === 1 || data.data[i].JB === 2){
+						zNodes[i].icon = "../images/jigou.png";
+					}else if(data.data[i].xiaofangchezhuangtai === '报停'){
+						zNodes[i].icon = "../images/baotingshuxiaofangche.png";
+					}else{
+						if(data.data[i].chujingzhuangtai === '在营'){
+							zNodes[i].icon = "../images/zaiyingshuxiaofangche.png";
+						}else {
+							zNodes[i].icon = "../images/chuyingshuxiaofangche.png";
+						}
+					}
+				}
+				var t = $("#treeDemo");
+				t = $.fn.zTree.init(t, setting, zNodes);
+				treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+				var nodes = treeObj.getNodes();
+				if (nodes.length > 0) {
+					for (var i = 0; i < nodes.length; i++) {
+						treeObj.expandNode(nodes[i], true, false, false);
+					}
+				}
+			}
+		});
+	};
+
+	//点击节点并获取此节点ID
+	function zTreeBeforeClick(treeId, treeNode, clickFlag) {
+		$.ajax({
+			type:'GET',
+			url: SERVER + "xiaofangcheNewShu",
+			success: function (data) {
+				zNodes = data.data;
+				for (var i = 0; i < zNodes.length; i++) {
+					if(data.data[i].JB === 3 || data.data[i].JB === 1 || data.data[i].JB === 2){
+						zNodes[i].icon = "../images/jigou.png";
+					}else if(data.data[i].xiaofangchezhuangtai === '报停'){
+						zNodes[i].icon = "../images/baotingshuxiaofangche.png";
+					}else{
+						if(data.data[i].chujingzhuangtai === '在营'){
+							zNodes[i].icon = "../images/zaiyingshuxiaofangche.png";
+						}else {
+							zNodes[i].icon = "../images/chuyingshuxiaofangche.png";
+						}
+					}
+				}
+				var t = $("#treeDemo");
+				t = $.fn.zTree.init(t, setting, zNodes);
+				treeObj = $.fn.zTree.getZTreeObj("treeDemo");
+				//展开点击节点的父节点
+				treeObj.expandNode(treeObj.getNodeByParam("id", treeNode.getParentNode().id), true, false);
+			}
+		});
+	};
+
+	var treeNodeClick = null;
+
+	function onClick(event, treeId, treeNode, clickFlag) {
+		points = [];
+		markers = [];
+		lnglat = [];
+		map.remove(markers);
+		if (treeNode.JB == "-1") {
+			//点击消防车，清除marker，只绘制次消防车，地图中心为消防车经纬度
+			getAllMarker(treeNode.cheId);//车辆ID
+			if (treeNode['jingdu'] != null && treeNode['weidu'] != null) {
+				map.setCenter([treeNode['jingdu'], treeNode['weidu']]);
+			}
+		} else {
+			//点击组织机构显示组织机构下所有消防车，清除marker，重新绘制，地图中心为组织机构电子围栏中心（如没有则不变）
+			getAllMarker();//机构代码
+			treeObj.expandNode(treeNode);
+			if (treeNode['jingdu'] != null && treeNode['weidu'] != null) {
+				map.setCenter([treeNode['jingdu'], treeNode['weidu']]);
+			}
+		}
+		treeNodeClick = treeNode;
+	}
+
+
+	function getAllMarker(cheId) {
+		infoWindow.close();
+		$.ajax({
+			type:"POST",
+			url: SERVER + "huoquXFCshishiweizhiLiebiao",
+			async:false,
+			success:function (data) {
+				for (var i = 0; i < data.data.length; i++) {
+					if (data.data[i].tbXiaofangcheweizhi.jingdu != null && data.data[i].tbXiaofangcheweizhi.weidu != null) {
+						var lnglat = [];
+						lnglat.push("" + data.data[i].tbXiaofangcheweizhi.jingdu + "");
+						lnglat.push("" + data.data[i].tbXiaofangcheweizhi.weidu + "");
+						var obj = {};
+						obj['jingdu'] = data.data[i].tbXiaofangcheweizhi.jingdu;
+						obj['weidu'] = parseInt(data.data[i].tbXiaofangcheweizhi.weidu * 1000) / 1000;
+						obj['lnglat'] = lnglat;
+						obj['chepaihaoma'] = data.data[i].tbXiaofangcheweizhi.chepaihaoma;
+						//显示的参数
+						obj['cheliangleixing'] = data.data[i].tbXiaofangcheweizhi.xiaofangcheleixing;
+						obj['suoshujigou'] = data.data[i].tbXiaofangcheweizhi.jigoumingcheng;
+						obj['weizhishijian'] = data.data[i].tbXiaofangcheweizhi.gengxinshijian;
+						obj['chujingzhuangtai'] = data.data[i].tbXiaofangcheNew.chujingzhuangtai;
+						obj['xiaofangchezhuangtai'] = data.data[i].tbXiaofangcheNew.xiaofangchezhuangtai;
+						obj['id'] = data.data[i].tbXiaofangcheNew.id;
+
+						obj['xiaofangcheleixing'] = data.data[i].tbXiaofangcheweizhi.xiaofangcheleixing;
+						obj['xiaofangcheleixing'] = data.data[i].tbXiaofangcheweizhi.xiaofangcheleixing;
+
+						obj['shifoushenyangsuocheliang'] = data.data[i].tbXiaofangcheNew.shifoushenyangsuocheliang;
+						if(data.data[i].tbCedpxx !== null){
+							obj['dipanxinxi'] = data.data[i].tbCedpxx.fvcptime;
+							if (data.data[i].tbCedpxx['runningspeed'] != -300 && data.data[i].tbCedpxx['runningspeed'] != "-300") {
+								obj['sudu'] = data.data[i].tbCedpxx['runningspeed'];
+							} else {
+								obj['sudu'] = "";
+							}
+							if (data.data[i].tbCedpxx['tachometer'] != -300 && data.data[i].tbCedpxx['tachometer'] != "-300") {
+								obj['fadongjizhuansu'] = data.data[i].tbCedpxx['tachometer'];
+							} else {
+								obj['fadongjizhuansu'] = "";
+							}
+							if (data.data[i].tbCedpxx['oilmass'] != -300 && data.data[i].tbCedpxx['oilmass'] != "-300") {
+								obj['shengyuranyou'] = data.data[i].tbCedpxx['oilmass'];
+							} else {
+								obj['shengyuranyou'] = "";
+							}
+							if (data.data[i].tbCedpxx['mileage'] != -300 && data.data[i].tbCedpxx['mileage'] != "-300") {
+								obj['zonglicheng'] = data.data[i].tbCedpxx['mileage'];
+							} else {
+								obj['zonglicheng'] = "";
+							}
+							if (data.data[i].tbCedpxx['coulombmeter'] != -300 && data.data[i].tbCedpxx['coulombmeter'] != "-300") {
+								obj['xudianchidianya'] = data.data[i].tbCedpxx['coulombmeter'];
+							} else {
+								obj['xudianchidianya'] = "";
+							}
+							if (data.data[i].tbCedpxx['engoiltemp'] != -300 && data.data[i].tbCedpxx['engoiltemp'] != "-300") {
+								obj['jiyouwendu'] = data.data[i].tbCedpxx['engoiltemp'];
+							} else {
+								obj['jiyouwendu'] = "";
+							}
+						}
+						if(data.data[i].tbCeszxx !== null){
+							obj['shangzhuangxinxi'] = data.data[i].tbCeszxx['fvaptime'];
+							if (data.data[i].tbCeszxx['hydriawaterlevel'] != -300 && data.data[i].tbCeszxx['hydriawaterlevel'] != "-300") {
+								obj['shuiguanyewei'] = data.data[i].tbCeszxx['hydriawaterlevel'];
+							} else {
+								obj['shuiguanyewei'] = "";
+							}
+							if (data.data[i].tbCeszxx['foamlevel'] != -300 && data.data[i].tbCeszxx['foamlevel'] != "-300") {
+								obj['apaomoguan'] = data.data[i].tbCeszxx['foamlevel'];
+							} else {
+								obj['apaomoguan'] = "";
+							}
+							obj['bpaomoguan'] = '';
+							if (data.data[i].tbCeszxx['pumpexitpressure'] != -300 && data.data[i].tbCeszxx['pumpexitpressure'] != "-300") {
+								obj['xiaofangshuanyali'] = data.data[i].tbCeszxx['pumpexitpressure'];
+							} else {
+								obj['xiaofangshuanyali'] = "";
+							}
+						}
+						points.push(obj);
+					}
+				}
+				//如果消防车经纬度差别很小，手动做一些纬度偏移+0.001
+				var map = {},
+						dest = [];
+				dest.push(points[0]);
+				for (var i = 0; i < points.length; i++) {
+					var ai = points[i];
+					var dj = points[i+1];
+					if(i<points.length-1){
+						if (Math.abs( dj.weidu - ai.weidu ) < 0.001 && Math.abs( dj.jingdu - ai.jingdu ) < 0.001) {
+							dj.weidu =ai.weidu + 0.0001;
+						}
+						dest.push(dj);
+					}
+					map[ai.weidu] = ai.weidu;
+				}
+				for (var i = 0; i < dest.length; i++) {
+					var lnglat = [];
+					lnglat.push(""+dest[i]['jingdu']+"");
+					lnglat.push(""+dest[i]['weidu']+"");
+					dest[i]['lnglat'] = lnglat;
+				}
+				for (var i = 0; i < dest.length; i += 1) {
+					var chepaihaoma = dest[i]['chepaihaoma'];
+					if(dest[i]['xiaofangchezhuangtai'] === '报停'){
+						markers.push(
+								new AMap.Marker({
+									position: dest[i]['lnglat'],
+									content: '<div style="background: url(../images/baotingxiaofangche.png); height: 40px; width: 60px; font-size:14px; font-weight:bold;"></div>',
+									offset: new AMap.Pixel(-15,-15),
+								})
+						)
+					}else{
+						if(dest[i]['chujingzhuangtai'] === '在营'){
+							markers.push(
+									new AMap.Marker({
+										position: dest[i]['lnglat'],
+										content: '<div style="background: url(../images/zaiyingxiaofangche.png); height: 40px; width: 60px; font-size:14px; font-weight:bold;"></div>',
+										offset: new AMap.Pixel(-15,-15),
+									})
+							)
+						}else{
+							markers.push(
+									new AMap.Marker({
+										position: dest[i]['lnglat'],
+										content: '<div style="background: url(../images/chuyingxiaofangche.png); height: 40px; width: 60px; font-size:14px; font-weight:bold;"></div>',
+										offset: new AMap.Pixel(-15,-15),
+									})
+							)
+						}
+					}
+				}
+				for (var a = 0; a < dest.length; a += 1) {
+					if(dest[a].id == cheId && dest[a].shifoushenyangsuocheliang == '是'){
+						panduandianji = true;
+						addInfoWindow2(markers[a],dest[a],panduandianji);
+					}else if(dest[a].id == cheId){
+						panduandianji = true;
+						addInfoWindow(markers[a],dest[a],panduandianji);
+					}else if(dest[a].shifoushenyangsuocheliang == '是'){
+						panduandianji = false;
+						addInfoWindow2(markers[a],dest[a],panduandianji);
+					}else{
+						panduandianji = false;
+						addInfoWindow(markers[a],dest[a],panduandianji);
+					}
+				}
+				addCluster();
+			}
+		})
+	}
+
+
+	function getXiaofangche() {
+		$.ajax({
+			type:"POST",
+			url: SERVER + "huoquXFCshishiweizhiLiebiao",
+			async:false,
+			success:function (data) {
+				for (var i = 0; i < data.data.length; i++) {
+					if (data.data[i].tbXiaofangcheweizhi.jingdu != null && data.data[i].tbXiaofangcheweizhi.weidu != null) {
+						var lnglat = [];
+						lnglat.push("" + data.data[i].tbXiaofangcheweizhi.jingdu + "");
+						lnglat.push("" + data.data[i].tbXiaofangcheweizhi.weidu + "");
+						var obj = {};
+						obj['jingdu'] = data.data[i].tbXiaofangcheweizhi.jingdu;
+						obj['weidu'] = parseInt(data.data[i].tbXiaofangcheweizhi.weidu * 1000) / 1000;
+						obj['lnglat'] = lnglat;
+						obj['chepaihaoma'] = data.data[i].tbXiaofangcheweizhi.chepaihaoma;
+						//显示的参数
+						obj['cheliangleixing'] = data.data[i].tbXiaofangcheweizhi.xiaofangcheleixing;
+						obj['suoshujigou'] = data.data[i].tbXiaofangcheweizhi.jigoumingcheng;
+						obj['weizhishijian'] = data.data[i].tbXiaofangcheweizhi.gengxinshijian;
+						obj['chujingzhuangtai'] = data.data[i].tbXiaofangcheNew.chujingzhuangtai;
+						obj['xiaofangchezhuangtai'] = data.data[i].tbXiaofangcheNew.xiaofangchezhuangtai;
+						obj['id'] = data.data[i].tbXiaofangcheNew.id;
+
+						obj['xiaofangcheleixing'] = data.data[i].tbXiaofangcheweizhi.xiaofangcheleixing;
+						obj['xiaofangcheleixing'] = data.data[i].tbXiaofangcheweizhi.xiaofangcheleixing;
+
+						obj['shifoushenyangsuocheliang'] = data.data[i].tbXiaofangcheNew.shifoushenyangsuocheliang;
+						if(data.data[i].tbCedpxx !== null){
+							obj['dipanxinxi'] = data.data[i].tbCedpxx.fvcptime;
+							if (data.data[i].tbCedpxx['runningspeed'] != -300 && data.data[i].tbCedpxx['runningspeed'] != "-300") {
+								obj['sudu'] = data.data[i].tbCedpxx['runningspeed'];
+							} else {
+								obj['sudu'] = "";
+							}
+							if (data.data[i].tbCedpxx['tachometer'] != -300 && data.data[i].tbCedpxx['tachometer'] != "-300") {
+								obj['fadongjizhuansu'] = data.data[i].tbCedpxx['tachometer'];
+							} else {
+								obj['fadongjizhuansu'] = "";
+							}
+							if (data.data[i].tbCedpxx['oilmass'] != -300 && data.data[i].tbCedpxx['oilmass'] != "-300") {
+								obj['shengyuranyou'] = data.data[i].tbCedpxx['oilmass'];
+							} else {
+								obj['shengyuranyou'] = "";
+							}
+							if (data.data[i].tbCedpxx['mileage'] != -300 && data.data[i].tbCedpxx['mileage'] != "-300") {
+								obj['zonglicheng'] = data.data[i].tbCedpxx['mileage'];
+							} else {
+								obj['zonglicheng'] = "";
+							}
+							if (data.data[i].tbCedpxx['coulombmeter'] != -300 && data.data[i].tbCedpxx['coulombmeter'] != "-300") {
+								obj['xudianchidianya'] = data.data[i].tbCedpxx['coulombmeter'];
+							} else {
+								obj['xudianchidianya'] = "";
+							}
+							if (data.data[i].tbCedpxx['engoiltemp'] != -300 && data.data[i].tbCedpxx['engoiltemp'] != "-300") {
+								obj['jiyouwendu'] = data.data[i].tbCedpxx['engoiltemp'];
+							} else {
+								obj['jiyouwendu'] = "";
+							}
+						}
+						if(data.data[i].tbCeszxx !== null){
+							obj['shangzhuangxinxi'] = data.data[i].tbCeszxx['fvaptime'];
+							if (data.data[i].tbCeszxx['hydriawaterlevel'] != -300 && data.data[i].tbCeszxx['hydriawaterlevel'] != "-300") {
+								obj['shuiguanyewei'] = data.data[i].tbCeszxx['hydriawaterlevel'];
+							} else {
+								obj['shuiguanyewei'] = "";
+							}
+							if (data.data[i].tbCeszxx['foamlevel'] != -300 && data.data[i].tbCeszxx['foamlevel'] != "-300") {
+								obj['apaomoguan'] = data.data[i].tbCeszxx['foamlevel'];
+							} else {
+								obj['apaomoguan'] = "";
+							}
+							obj['bpaomoguan'] = '';
+							if (data.data[i].tbCeszxx['pumpexitpressure'] != -300 && data.data[i].tbCeszxx['pumpexitpressure'] != "-300") {
+								obj['xiaofangshuanyali'] = data.data[i].tbCeszxx['pumpexitpressure'];
+							} else {
+								obj['xiaofangshuanyali'] = "";
+							}
+						}
+						points.push(obj);
+					}
+				}
+				//如果消防车经纬度差别很小，手动做一些纬度偏移+0.001
+				var map = {},
+						dest = [];
+				dest.push(points[0]);
+				for (var i = 0; i < points.length; i++) {
+					var ai = points[i];
+					var dj = points[i+1];
+					if(i<points.length-1){
+						if (Math.abs( dj.weidu - ai.weidu ) < 0.001 && Math.abs( dj.jingdu - ai.jingdu ) < 0.001) {
+							dj.weidu =ai.weidu + 0.0001;
+						}
+						dest.push(dj);
+					}
+					map[ai.weidu] = ai.weidu;
+				}
+				for (var i = 0; i < dest.length; i++) {
+					var lnglat = [];
+					lnglat.push(""+dest[i]['jingdu']+"");
+					lnglat.push(""+dest[i]['weidu']+"");
+					dest[i]['lnglat'] = lnglat;
+				}
+				for (var i = 0; i < dest.length; i++) {
+					var lnglat = [];
+					lnglat.push(""+dest[i]['jingdu']+"");
+					lnglat.push(""+dest[i]['weidu']+"");
+					dest[i]['lnglat'] = lnglat;
+				}
+				for (var i = 0; i < dest.length; i += 1) {
+					var chepaihaoma = dest[i]['chepaihaoma'];
+					if(dest[i]['xiaofangchezhuangtai'] === '报停'){
+						markers.push(
+								new AMap.Marker({
+									position: dest[i]['lnglat'],
+									content: '<div style="background: url(../images/baotingxiaofangche.png); height: 40px; width: 60px; font-size:14px; font-weight:bold;"></div>',
+									offset: new AMap.Pixel(-15,-15),
+								})
+						)
+					}else{
+						if(dest[i]['chujingzhuangtai'] === '在营'){
+							markers.push(
+									new AMap.Marker({
+										position: dest[i]['lnglat'],
+										content: '<div style="background: url(../images/zaiyingxiaofangche.png); height: 40px; width: 60px; font-size:14px; font-weight:bold;"></div>',
+										offset: new AMap.Pixel(-15,-15),
+									})
+							)
+						}else{
+							markers.push(
+									new AMap.Marker({
+										position: dest[i]['lnglat'],
+										content: '<div style="background: url(../images/chuyingxiaofangche.png); height: 40px; width: 60px; font-size:14px; font-weight:bold;"></div>',
+										offset: new AMap.Pixel(-15,-15),
+									})
+							)
+						}
+					}
+				}
+				for (var a = 0; a < dest.length; a += 1) {
+					if(dest[a].shifoushenyangsuocheliang == '是'){
+						panduandianji = false;
+						addInfoWindow2(markers[a],dest[a],panduandianji);
+					}else{
+						panduandianji = false;
+						addInfoWindow(markers[a],dest[a],panduandianji);
+					}
+				}
+				addCluster();
+			}
+		})
+	}
+
+
+	//消防车弹框信息
+	function addInfoWindow(markers, points,panduandianji) {
+		var markerjwd = markers.getPosition();
+		infoWindow = new AMap.InfoWindow({
+			isCustom: false,
+			//	        offset: new AMap.Pixel(0, -31),
+			content: ""
+		});
+		if(panduandianji == true){
+			infoWindow.setContent(
+					"<div style='box-sizing: content-box; width: 300px; height: 120px; position: static; left: 16px; top: 16px; z-index: 10; overflow: hidden;'>"
+					+"<div class='BMap_bubble_title' style='display: none; overflow: hidden; height: auto; line-height: 24px; white-space: nowrap; width: auto;'></div>"
+					+"<div class='BMap_bubble_content' style='width: auto; height: auto;'>"
+					+	"<div class='clxx_box'>"
+					+		"<span>车牌号码：</span>"
+					+		"<span>" + points.chepaihaoma + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+					+		"<span>车辆类型：</span>"
+					+		"<span>" + points.cheliangleixing + "</span> &nbsp;&nbsp;&nbsp;&nbsp;"
+					+       "<br/>"
+					+		"<span>所属机构：</span>"
+					+		"<span>" + points.suoshujigou + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+					+		"<span>出警状态：</span>"
+					+		"<span>" + points.chujingzhuangtai + "</span> &nbsp;&nbsp;&nbsp;&nbsp;"
+					+       "<br/>"
+					+		"<span>消防车状态：</span>"
+					+		"<span>" + points.xiaofangchezhuangtai + "</span>"
+					+	"</div>"
+					+	"<div class='aaa'>"
+					+		"<span style='color:#429842'>位置时间：</span>"
+					+		"<span style='color:#429842'>" + moment(points.weizhishijian).format('YYYY-MM-DD HH:mm:ss') + "</span>"
+					+	"</div>"
+					+	"<div class='aaa'>"
+					+		"<a style='color:blue' onclick='openMessage2(\"" + points.chepaihaoma + "\")'>轨迹信息</a>"
+					+	"</div>"
+					+"</div>"
+					+"</div>"
+			);
+			infoWindow.open(map, markerjwd);
+		}else{
+			markers.on('dblclick', function(e){
+
+				infoWindow.setContent(
+						"<div style='box-sizing: content-box; width: 300px; height: 120px; position: static; left: 16px; top: 16px; z-index: 10; overflow: hidden;'>"
+						+"<div class='BMap_bubble_title' style='display: none; overflow: hidden; height: auto; line-height: 24px; white-space: nowrap; width: auto;'></div>"
+						+"<div class='BMap_bubble_content' style='width: auto; height: auto;'>"
+						+	"<div class='clxx_box'>"
+						+		"<span>车牌号码：</span>"
+						+		"<span>" + points.chepaihaoma + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+						+		"<span>车辆类型：</span>"
+						+		"<span>" + points.cheliangleixing + "</span> &nbsp;&nbsp;&nbsp;&nbsp;"
+						+       "<br/>"
+						+		"<span>所属机构：</span>"
+						+		"<span>" + points.suoshujigou + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+						+		"<span>出警状态：</span>"
+						+		"<span>" + points.chujingzhuangtai + "</span> &nbsp;&nbsp;&nbsp;&nbsp;"
+						+       "<br/>"
+						+		"<span>消防车状态：</span>"
+						+		"<span>" + points.xiaofangchezhuangtai + "</span>"
+						+	"</div>"
+						+	"<div class='aaa'>"
+						+		"<span style='color:#429842'>位置时间：</span>"
+						+		"<span style='color:#429842'>" + moment(points.weizhishijian).format('YYYY-MM-DD HH:mm:ss') + "</span>"
+						+	"</div>"
+						+	"<div class='aaa'>"
+						+		"<a style='color:blue' onclick='openMessage2(\"" + points.chepaihaoma + "\")'>轨迹信息</a>"
+						+	"</div>"
+						+"</div>"
+						+"</div>"
+				);
+
+				infoWindow.open(map, markerjwd);
+			});
+		}
+	}
+
+	function addInfoWindow2(markers, points,panduandianji) {
+		var markerjwd = markers.getPosition();
+		infoWindow = new AMap.InfoWindow({
+			isCustom: false,
+			//	        offset: new AMap.Pixel(0, -31),
+			content: ""
+		});
+		if(panduandianji == true){
+			infoWindow.setContent(
+					"<div style='box-sizing: content-box; width: 440px; height: 340px; position: static; left: 16px; top: 16px; z-index: 10; overflow: hidden;'>"
+					+ "<div class='BMap_bubble_title' style='display: none; overflow: hidden; height: auto; line-height: 24px; white-space: nowrap; width: auto;'></div>"
+					+ "<div class='BMap_bubble_content' style='width: auto; height: auto;'>"
+					+ "<div class='clxx_box'>"
+					+ "<span>车牌号码：</span>"
+					+ "<span>" + points.chepaihaoma + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+					+ "<span>车辆类型：</span>"
+					+ "<span>" + points.cheliangleixing + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+					+ "<span>所属机构：</span>"
+					+ "<span>" + points.suoshujigou + "</span>"
+					+ "</div>"
+					+ "<div class='aaa'>"
+					+ "<span>底盘信息：</span>"
+					+ "<span>" + points.dipanxinxi + "</span>"
+					+ "</div>"
+					+ "<div class='detail_box'>"
+					+ "<table>"
+					+ "<tbody>"
+					+ "<tr>"
+					+ "<td>速度(km/h):</td>"
+					+ "<td class='blue'>" + points.sudu + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "<td>发动机转速(r/min):</td>"
+					+ "<td class='blue'>" + points.fadongjizhuansu + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "<td>剩余燃油百分比(%):</td>"
+					+ "<td class='blue'>" + points.shengyuranyou + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "</tr>"
+					+ "<tr>"
+					+ "<td>总里程(km):</td>"
+					+ "<td class='blue'>" + points.zonglicheng + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "<td>蓄电池电压(V):</td>"
+					+ "<td class='blue'>" + points.xudianchidianya + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "<td>机油温度(℃):</td>"
+					+ "<td class='blue'>" + points.jiyouwendu + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "</tr>"
+					+ "</tbody>"
+					+ "</table>"
+					+ "</div>"
+					+ "<div class='aaa'>"
+					+ "<span style='color:#ff8800'>上装信息：</span>"
+					+ "<span style='color:#ff8800'>" + points.shangzhuangxinxi + "</span>"
+					+ "</div>"
+					+ "<div class='szxx_box'>"
+					+ "<table>"
+					+ "<tbody>"
+					+ "<tr>"
+					+ "<td>水罐液位(%):</td>"
+					+ "<td class='blue'>" + points.shuiguanyewei + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "<td>A类泡沫罐液位(%):</td>"
+					+ "<td class='blue'>" + points.apaomoguan + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "<td>B类泡沫罐液位(%):</td>"
+					+ "<td class='blue'>" + points.bpaomoguan + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "</tr>"
+					+ "<tr>"
+					+ "<td>消防水泵出口压力(kpa):</td>"
+					+ "<td class='blue'>" + points.xiaofangshuanyali + "</td>"
+					+ "<td class='bor_none' width='5'></td>"
+					+ "</tr>"
+					+ "</tbody>"
+					+ "</table>"
+					+ "</div>"
+					+ "<br/>"
+					+ "<div class='aaa'>"
+					+ "<span style='color:#429842'>位置时间：</span>"
+					+ "<span style='color:#429842'>" + points.weizhishijian + "</span>"
+					+ "</div>"
+					+ "<div class='aaa'>"
+					+ "<a style='color:blue' onclick='openMessage(" + points.id + ")'>实时信息详情</a>"
+					+ "<a style='color:blue' onclick='openMessage2(\"" + points.chepaihaoma + "\")'>轨迹信息</a>"
+					+ "</div>"
+					+ "</div>"
+					+ "</div>"
+			);
+			infoWindow.open(map, markerjwd);
+		}else {
+			markers.on('dblclick', function (e) {
+
+				infoWindow.setContent(
+						"<div style='box-sizing: content-box; width: 440px; height: 340px; position: static; left: 16px; top: 16px; z-index: 10; overflow: hidden;'>"
+						+ "<div class='BMap_bubble_title' style='display: none; overflow: hidden; height: auto; line-height: 24px; white-space: nowrap; width: auto;'></div>"
+						+ "<div class='BMap_bubble_content' style='width: auto; height: auto;'>"
+						+ "<div class='clxx_box'>"
+						+ "<span>车牌号码：</span>"
+						+ "<span>" + points.chepaihaoma + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+						+ "<span>车辆类型：</span>"
+						+ "<span>" + points.cheliangleixing + "</span> &nbsp;&nbsp;|&nbsp;&nbsp;"
+						+ "<span>所属机构：</span>"
+						+ "<span>" + points.suoshujigou + "</span>"
+						+ "</div>"
+						+ "<div class='aaa'>"
+						+ "<span>底盘信息：</span>"
+						+ "<span>" + points.dipanxinxi + "</span>"
+						+ "</div>"
+						+ "<div class='detail_box'>"
+						+ "<table>"
+						+ "<tbody>"
+						+ "<tr>"
+						+ "<td>速度(km/h):</td>"
+						+ "<td class='blue'>" + points.sudu + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "<td>发动机转速(r/min):</td>"
+						+ "<td class='blue'>" + points.fadongjizhuansu + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "<td>剩余燃油百分比(%):</td>"
+						+ "<td class='blue'>" + points.shengyuranyou + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "</tr>"
+						+ "<tr>"
+						+ "<td>总里程(km):</td>"
+						+ "<td class='blue'>" + points.zonglicheng + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "<td>蓄电池电压(V):</td>"
+						+ "<td class='blue'>" + points.xudianchidianya + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "<td>机油温度(℃):</td>"
+						+ "<td class='blue'>" + points.jiyouwendu + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "</tr>"
+						+ "</tbody>"
+						+ "</table>"
+						+ "</div>"
+						+ "<div class='aaa'>"
+						+ "<span style='color:#ff8800'>上装信息：</span>"
+						+ "<span style='color:#ff8800'>" + points.shangzhuangxinxi + "</span>"
+						+ "</div>"
+						+ "<div class='szxx_box'>"
+						+ "<table>"
+						+ "<tbody>"
+						+ "<tr>"
+						+ "<td>水罐液位(%):</td>"
+						+ "<td class='blue'>" + points.shuiguanyewei + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "<td>A类泡沫罐液位(%):</td>"
+						+ "<td class='blue'>" + points.apaomoguan + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "<td>B类泡沫罐液位(%):</td>"
+						+ "<td class='blue'>" + points.bpaomoguan + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "</tr>"
+						+ "<tr>"
+						+ "<td>消防水泵出口压力(kpa):</td>"
+						+ "<td class='blue'>" + points.xiaofangshuanyali + "</td>"
+						+ "<td class='bor_none' width='5'></td>"
+						+ "</tr>"
+						+ "</tbody>"
+						+ "</table>"
+						+ "</div>"
+						+ "<br/>"
+						+ "<div class='aaa'>"
+						+ "<span style='color:#429842'>位置时间：</span>"
+						+ "<span style='color:#429842'>" + points.weizhishijian + "</span>"
+						+ "</div>"
+						+ "<div class='aaa'>"
+						+ "<a style='color:blue' onclick='openMessage(" + points.id + ")'>实时信息详情</a>"
+						+ "<a style='color:blue' onclick='openMessage2(\"" + points.chepaihaoma + "\")'>轨迹信息</a>"
+						+ "</div>"
+						+ "</div>"
+						+ "</div>"
+				);
+
+				infoWindow.open(map, markerjwd);
+			});
+		}
+	}
+
+	function openMessage2(chepaihaoma) {
+		layer.open({
+			type: 2,
+			title:['轨迹信息','text-align:center'],
+			area: ['1200px', '600px'],
+			shadeClose: true,
+			content: "./amapLink.html?chepaihaoma=" + chepaihaoma,
+		});
+	}
+	function openMessage1(id) {
+		layer.open({
+			type: 2,
+			title:['消防车信息','text-align:center'],
+			area: ['700px', '600px'],
+			shadeClose: true,
+			content: "./tankuang.html?id=" + id,
+			end: function () {
+				circleEditor.open();
+			}
+		});
+	}
+
+	//点聚合
+	function addCluster(tag) {
+		if (cluster) {
+			cluster.setMap(null);
+		}
+		cluster = new AMap.MarkerClusterer(map, markers,{gridSize:80,minClusterSize:100});
+	}
+
+	window.setInterval(refresh, 5000);
+
+	function refresh() {
+		points = [];
+		markers = [];
+		lnglat = [];
+		map.remove(markers);
+		if (treeNodeClick == {} || treeNodeClick == null) {
+			getXiaofangche();
+		} else {
+			if (treeNodeClick.JB == "-1") {
+				//点击消防车，清除marker，只绘制次消防车，地图中心为消防车经纬度
+				getXiaofangche();//车辆ID
+			} else {
+				//点击组织机构显示组织机构下所有消防车，清除marker，重新绘制，地图中心为组织机构电子围栏中心（如没有则不变）
+				getXiaofangche();//结构代码
+			}
+		}
+	}
+
+	function getDianziweilan() {
+		var jigoumingcheng = sessionStorage.getItem("jigoumingcheng");
+		$.ajax({
+			url:SERVER+"zuzhijigouXiangqingAllZhongdui",
+			async:false,
+			success:function(data) {
+				for(i=0;i<data.data.length;i++){
+					if (data.data[i].jingdu != 0 && data.data[i].weidu != 0 && data.data[i].dianziweilanbanjing != 0) {
+						var circlei = new AMap.Circle({
+							center: new AMap.LngLat(data.data[i].jingdu,data.data[i].weidu),// 圆心位置
+							radius: data.data[i].dianziweilanbanjing, //半径
+							strokeColor: "#D75553", //线颜色
+							strokeOpacity: 1, //线透明度
+							strokeWeight: 3, //线粗细度
+							fillColor: "#1791fc", //填充颜色
+							fillOpacity: 0.05//填充透明度
+						});
+						circlei.setMap(map);
+					} else {
+
+					}
+				}
+			}
+		});
+		getXiaofangche();
+	}
+
+</script>
+</body>
+</html>
