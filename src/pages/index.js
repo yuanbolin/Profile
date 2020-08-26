@@ -283,16 +283,22 @@ class Index extends React.Component {
     return (
       <div className={styles.container}>
         <Row style={{ height: '100%' }}>
-          <Col className={styles.box} span={8}>
-            <div className={styles.item} />
-          </Col>
-          <Col className={styles.box} span={8}>
+          <Col className={styles.container_box} span={8}>
             <div className={styles.item}>
-              <div className={styles.map} ref={ref => (this.ref = ref)} />
+              <div className={styles.content} />
             </div>
           </Col>
-          <Col className={styles.box} span={8}>
-            <div className={styles.item} />
+          <Col className={styles.container_box} span={8}>
+            <div className={styles.item}>
+              <div className={styles.content}>
+                <div className={styles.map} ref={ref => (this.ref = ref)} />
+              </div>
+            </div>
+          </Col>
+          <Col className={styles.container_box} span={8}>
+            <div className={styles.item}>
+              <div className={styles.content} />
+            </div>
           </Col>
         </Row>
       </div>
