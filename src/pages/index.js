@@ -3,6 +3,8 @@ import { Row, Col } from 'antd'
 import echarts from 'echarts'
 import geoJson from './components/china.json'
 import styles from './index.less'
+import Zhexiantu from './components/danzhexiantu'
+import Duozhexiantu from './components/duozhexiantu'
 
 const yiranyibao =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDY3IDc5LjE1Nzc0NywgMjAxNS8wMy8zMC0yMzo0MDo0MiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjJGNzNENzFGNzMxRjExRUFBRjJBOUQ5OEMyMDZEMThDIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjJGNzNENzIwNzMxRjExRUFBRjJBOUQ5OEMyMDZEMThDIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6MkY3M0Q3MUQ3MzFGMTFFQUFGMkE5RDk4QzIwNkQxOEMiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6MkY3M0Q3MUU3MzFGMTFFQUFGMkE5RDk4QzIwNkQxOEMiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz734ofJAAABLElEQVR42mL8//8/AxzcZAkEkn5AbAPEP4H4MBCvZVD/swemhBGu4SbLQiAZx4AdzANqSgazQBr+32CeB8T/v15Q+19UPvu/ov3p/1ouR//XN0z8/+Oy3H+QHBAXgw0HMtRAAt8vy//Xdj/yn0HhAQoOiF8P03ABpIEJaIktyKalh+IZrt6UwXDLhoOGDMduRIGY+kBnW4M0GIB4F+7LM+AClx6qwJh6IA2PQCxZkbc4NUgLweWegjQcAbHiHDYwcPB9w1CsoviCwd1wDYx7GBZKm0EeO7UlChw6MA/bBu36f/+QK8zTc0BqIfFwkwXk2/VAbAK2960NAyvLTwYx/tMwk7cDsT8wLn4zosX0dGioaUNFQM49BFRYjRnTyOAmizSQ/ANU+BJdCiDAAH6CnUSqTcEzAAAAAElFTkSuQmCC'
@@ -57,7 +59,7 @@ class Index extends React.Component {
         },
         itemStyle: {
           normal: {
-            borderWidth: 1, //区域边框宽度
+            borderWidth: 0.5, //区域边框宽度
             borderColor: '#F5F5F5', //区域边框颜色
             areaColor: '#0c7ebe', //区域颜色
             label: { show: true },
@@ -68,7 +70,7 @@ class Index extends React.Component {
             show: true, //选中效果
             borderWidth: 1, //区域边框宽度
             borderColor: 'rgba(2, 152, 252, 0.5)', //区域边框颜色
-            areaColor: 'rgba(0, 29, 146, 0.9)' //区域颜色
+            areaColor: '#096599' //区域颜色
           }
         }
       },
@@ -292,19 +294,22 @@ class Index extends React.Component {
     return (
       <div className={styles.container}>
         <Row style={{ height: '100%' }}>
-          <Col className={styles.container_box} span={8}>
-            <div className={styles.item}>
-              <div className={styles.content} />
-            </div>
-          </Col>
-          <Col className={styles.container_box} span={8}>
+          <Col className={styles.container_box} span={7}>
             <div className={styles.item}>
               <div className={styles.content}>
-                <div className={styles.map} ref={ref => (this.ref = ref)} />
+                <Duozhexiantu heighttemp={'auto'} />
               </div>
             </div>
           </Col>
-          <Col className={styles.container_box} span={8}>
+          <Col className={styles.container_box} span={10}>
+            <div className={styles.item}>
+              <div className={styles.content}>
+                <div className={styles.map} ref={ref => (this.ref = ref)} />
+                <Zhexiantu heighttemp={'auto'} />
+              </div>
+            </div>
+          </Col>
+          <Col className={styles.container_box} span={7}>
             <div className={styles.item}>
               <div className={styles.content} />
             </div>
