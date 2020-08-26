@@ -48,7 +48,7 @@ class Index extends React.Component {
       },
       geo: {
         roam: true, // 缩放拖动
-        zoom: 1.2, //初始放大比例
+        zoom: 0.8, //初始放大比例
         map: 'china', // 自定义扩展图表类型 用于选择省份
         label: {
           show: true, // 显示标签
